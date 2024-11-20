@@ -1,0 +1,41 @@
+@startuml
+
+skinparam packageStyle rectangle
+
+actor User
+
+rectangle "SleepEZ Dream Diary App" {
+    rectangle "Presentation Layer" {
+        rectangle "UI Components" as UI
+        rectangle "ViewModels" as VM
+    }
+
+    rectangle "Data Layer" {
+        rectangle "Repositories" as Repo
+        rectangle "Room Database" as DB
+        rectangle "DAOs" as DAOs
+    }
+
+    rectangle "Service Layer" {
+        rectangle "AlarmService"
+    }
+
+    rectangle "Receiver Layer" {
+        rectangle "AlarmReceiver"
+        rectangle "DismissAlarmReceiver"
+    }
+}
+
+User --> UI : Interacts with
+UI --> VM : Sends user actions
+VM --> Repo : Requests data operations
+Repo --> DAOs : Performs CRUD operations
+DAOs --> DB : Accesses database
+Repo --> VM : Returns data
+VM --> UI : Updates UI
+
+AlarmService --> AlarmReceiver : Handles alarms
+AlarmReceiver --> AlarmService : Starts service
+AlarmService --> User : Notifies via Notification
+
+@enduml

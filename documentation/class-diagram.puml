@@ -1,0 +1,128 @@
+@startuml
+
+package "Data Layer" {
+    class Dream {
+        +Int id
+        +String title
+        +String content
+        +String category
+        +Long date
+    }
+
+    class Alarm {
+        +Int id
+        +Long time
+        +Boolean isActive
+        +String soundUri
+    }
+
+    interface DreamDao {
+        +Flow<List<Dream>> getRecentDreams()
+        +Flow<List<Dream>> getDreamsByCategory(String category)
+        +Flow<List<Dream>> searchDreams(String query)
+        +suspend fun insertDream(Dream dream)
+        +suspend fun updateDream(Dream dream)
+        +suspend fun deleteDream(Dream dream)
+        +Flow<Dream?> getDreamById(Long dreamId)
+        +Flow<List<Dream>> getDreamsByDateRange(Long startDate, Long endDate)
+    }
+
+    interface AlarmDao {
+        +Flow<List<Alarm>> getAllAlarms()
+        +suspend fun insertAlarm(Alarm alarm): Long
+        +suspend fun updateAlarm(Alarm alarm)
+        +suspend fun deleteAlarm(Alarm alarm)
+        +Flow<Alarm?> getAlarmById(Int alarmId)
+        +suspend fun updateSoundUri(Int alarmId, String soundUri)
+        +suspend fun getAlarmByIdSync(Int alarmId): Alarm?
+        +Flow<List<Alarm>> getActiveAlarms()
+    }
+
+    class SleepEZDatabase {
+        +DreamDao dreamDao()
+        +AlarmDao alarmDao()
+    }
+
+    class DreamRepository {
+        +getDreamById(Long dreamId): Flow<Dream?>
+        +getRecentDreams(): Flow<List<Dream>>
+        +getDreamsByCategory(String category): Flow<List<Dream>>
+        +searchDreams(String query): Flow<List<Dream>>
+        +insertDream(Dream dream)
+        +updateDream(Dream dream)
+        +deleteDream(Dream dream)
+        +getDreamsByDateRange(Long startDate, Long endDate): Flow<List<Dream>>
+    }
+
+    class AlarmRepository {
+        +getAllAlarms(): Flow<List<Alarm>>
+        +insertAlarm(Alarm alarm): Long
+        +updateAlarm(Alarm alarm)
+        +deleteAlarm(Alarm alarm)
+        +getAlarmByIdSync(Int alarmId): Alarm?
+        +updateAlarmSoundUri(Int alarmId, String soundUri)
+        +getActiveAlarms(): Flow<List<Alarm>>
+    }
+}
+
+package "Presentation Layer" {
+    class HomeViewModel {
+        +Flow<List<Dream>> recentDreams
+        +AlarmViewModel alarmViewModel
+    }
+
+    class LogViewModel {
+        +Flow<List<Dream>> searchResults
+        +Flow<List<Dream>> recentDreams
+        +Flow<List<Dream>> getDreamsByCategory(String category)
+        +generateDreamReport(Long startDate, Long endDate, Uri folderUri)
+        +addDream(Dream dream)
+        +deleteDream(Dream dream)
+        +updateDream(Dream dream)
+        +getDreamById(Long dreamId): Flow<Dream?>
+    }
+
+    class AlarmViewModel {
+        +Flow<List<Alarm>> alarms
+        +Flow<List<Alarm>> activeAlarms
+        +addAlarm(Alarm alarm)
+        +updateAlarm(Alarm alarm)
+        +deleteAlarm(Alarm alarm)
+        +updateAlarmSoundUri(Int alarmId, String soundUri)
+    }
+
+    class MainActivity {
+        +onCreate(Bundle savedInstanceState)
+    }
+}
+
+package "Service Layer" {
+    class AlarmService {
+        +onStartCommand(Intent intent, Int flags, Int startId): Int
+        +onDestroy()
+        +onBind(Intent intent): IBinder?
+    }
+}
+
+package "Receiver Layer" {
+    class AlarmReceiver {
+        +onReceive(Context context, Intent intent)
+        -rescheduleAlarm(Context context, Int alarmId, String soundUriString)
+        -updateAlarmTimeInDatabase(Context context, Int alarmId, Long newTime)
+    }
+
+    class DismissAlarmReceiver {
+        +onReceive(Context context, Intent intent)
+    }
+}
+
+HomeViewModel --> AlarmViewModel
+HomeViewModel --> DreamRepository
+LogViewModel --> DreamRepository
+AlarmViewModel --> AlarmRepository
+DreamRepository --> DreamDao
+AlarmRepository --> AlarmDao
+SleepEZDatabase --> DreamDao
+SleepEZDatabase --> AlarmDao
+
+@enduml
